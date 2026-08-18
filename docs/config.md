@@ -2069,6 +2069,9 @@ Default: `"cache"`
 
 FUSE mount point configuration options.
 
+> [!WARNING]
+> While `/ipns` or `/mfs` is mounted, change what they hold through the mounted filesystem only. Writing to the same MFS tree with `ipfs files` commands at the same time is not supported: each side keeps its own view of the tree, so a write made on one side can be lost when the other writes back, and a file deleted and created again with `ipfs files` still looks like the same file to programs watching it on the mount. Unmount before using `ipfs files` on a mounted tree.
+
 All mounts expose the `ipfs.cid` extended attribute on files and directories, returning the CID of the underlying DAG node:
 
 ```console
@@ -3603,6 +3606,10 @@ It is possible to inspect the runtime limits via `ipfs swarm resources --help`.
 > `Swarm.ResourceMgr.MaxMemory` is the memory limit for go-libp2p networking stack alone, and not for entire Kubo or Bitswap.
 >
 > To set memory limit for the entire Kubo process, use [`GOMEMLIMIT` environment variable](http://web.archive.org/web/20240222201412/https://kupczynski.info/posts/go-container-aware/) which all Go programs recognize, and then set `Swarm.ResourceMgr.MaxMemory` to less than your custom `GOMEMLIMIT`.
+> For a worked example on constrained hardware, see [Kubo on low-memory devices](production/low-memory.md).
+
+> [!CAUTION]
+> Leave this unset unless you know what you are doing. Setting it too low cripples connectivity: the daemon keeps running and looks online, but the resource manager refuses new connections ("Protected from exceeding resource limits" in logs, inspect with `ipfs swarm resources`). See [libp2p resource management](libp2p-resource-management.md).
 
 Default: `[TOTAL_SYSTEM_MEMORY]/2`
 Type: [`optionalBytes`](#optionalbytes)
@@ -4561,6 +4568,7 @@ Reduces daemon overhead on the system by disabling optional swarm services.
 > [!NOTE]
 > This profile is provided for legacy reasons.
 > With modern Kubo setting the above should not be necessary.
+> For running on constrained hardware, see [Kubo on low-memory devices](production/low-memory.md): it covers these settings individually, plus memory limits (systemd, `GOMEMLIMIT`) and DHT announcement sizing.
 
 ### `announce-off` profile
 
